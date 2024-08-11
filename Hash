@@ -1,0 +1,90 @@
+#include <stdio.h>     // Menyertakan pustaka standar input-output
+#include <stdlib.h>    // Menyertakan pustaka standar untuk fungsi malloc, free, dan lainnya
+#include <string.h>    // Menyertakan pustaka standar untuk manipulasi string
+
+#define TABLE_SIZE 10  // Mendefinisikan ukuran hash table sebagai 10
+
+// Mendefinisikan struktur data untuk menyimpan informasi mahasiswa
+typedef struct Student {
+    int nim;                 // Menyimpan NIM mahasiswa
+    char name[100];          // Menyimpan nama mahasiswa
+    struct Student* next;    // Pointer ke mahasiswa berikutnya untuk mengatasi collision (chaining)
+} Student;
+
+Student* hashTable[TABLE_SIZE];  // Membuat hash table sebagai array dari pointer ke struktur Student
+
+// Fungsi hash sederhana: menghitung indeks berdasarkan NIM menggunakan modulus
+int hashFunction(int nim) {
+    return nim % TABLE_SIZE;  // Menghasilkan indeks dengan cara membagi NIM dengan ukuran tabel dan mengambil sisanya
+}
+
+// Fungsi untuk menambahkan data mahasiswa ke dalam hash table
+void insert(int nim, char* name) {
+    int index = hashFunction(nim);  // Menggunakan fungsi hash untuk mendapatkan indeks tabel
+    Student* newStudent = (Student*) malloc(sizeof(Student));  // Alokasi memori untuk mahasiswa baru
+    newStudent->nim = nim;          // Menyimpan NIM mahasiswa baru
+    strcpy(newStudent->name, name); // Menyimpan nama mahasiswa baru
+    newStudent->next = NULL;        // Menetapkan pointer next ke NULL karena ini adalah node baru
+
+    if (hashTable[index] == NULL) {  // Jika tidak ada collision (bucket kosong)
+        hashTable[index] = newStudent;  // Tempatkan mahasiswa baru di bucket yang sesuai
+    } else {  // Jika terjadi collision
+        Student* temp = hashTable[index];  // Mulai dari awal linked list di bucket ini
+        while (temp->next != NULL) {  // Iterasi hingga mencapai akhir linked list
+            temp = temp->next;  // Pindah ke node berikutnya
+        }
+        temp->next = newStudent;  // Tambahkan mahasiswa baru di akhir linked list
+    }
+}
+
+// Fungsi untuk mencari data mahasiswa berdasarkan NIM
+Student* search(int nim) {
+    int index = hashFunction(nim);  // Menggunakan fungsi hash untuk mendapatkan indeks tabel
+    Student* temp = hashTable[index];  // Mulai dari awal linked list di bucket yang sesuai
+
+    while (temp != NULL) {  // Iterasi melalui linked list
+        if (temp->nim == nim) {  // Jika ditemukan NIM yang cocok
+            return temp;  // Kembalikan pointer ke struktur mahasiswa
+        }
+        temp = temp->next;  // Pindah ke node berikutnya
+    }
+    return NULL;  // Jika tidak ditemukan, kembalikan NULL
+}
+
+// Fungsi untuk menampilkan semua data mahasiswa dalam hash table
+void display() {
+    for (int i = 0; i < TABLE_SIZE; i++) {  // Iterasi melalui setiap bucket dalam hash table
+        Student* temp = hashTable[i];  // Mulai dari awal linked list di bucket ini
+        if (temp == NULL) {  // Jika bucket kosong
+            printf("HashTable[%d]: Empty\n", i);  // Cetak bahwa bucket kosong
+        } else {  // Jika ada data dalam bucket
+            printf("HashTable[%d]: ", i);  // Cetak indeks bucket
+            while (temp != NULL) {  // Iterasi melalui linked list dalam bucket
+                printf("-> [NIM: %d, Name: %s] ", temp->nim, temp->name);  // Cetak NIM dan nama mahasiswa
+                temp = temp->next;  // Pindah ke node berikutnya
+            }
+            printf("\n");  // Cetak baris baru setelah mencetak semua data di bucket ini
+        }
+    }
+}
+
+// Fungsi utama (main) program
+int main() {
+    // Menambahkan beberapa data mahasiswa ke dalam hash table
+    insert(101, "Fatih Jibril");
+    insert(102, "Jibril Mikail");
+    insert(103, "Israfil Izrail");
+    insert(105, "Munkar Nakir");
+
+    display();  // Menampilkan seluruh isi hash table
+
+    int searchNim = 101;  // Menentukan NIM mahasiswa yang akan dicari
+    Student* student = search(searchNim);  // Mencari mahasiswa berdasarkan NIM
+    if (student != NULL) {  // Jika mahasiswa ditemukan
+        printf("Student found: NIM: %d, Name: %s\n", student->nim, student->name);  // Cetak NIM dan nama mahasiswa
+    } else {  // Jika mahasiswa tidak ditemukan
+        printf("Student with NIM %d not found.\n", searchNim);  // Cetak pesan bahwa mahasiswa tidak ditemukan
+    }
+
+    return 0;  // Mengakhiri program
+}
